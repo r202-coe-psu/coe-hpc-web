@@ -1,0 +1,9 @@
+.venv/
+node_modules/
+output/
+__pycache__/
+*.pyc
+theme/static/css/style.css
+
+# Live Slurm snapshot is generated data, never hand-edited or committed.
+content/data/cluster_status.json

@@ -1,0 +1,64 @@
+{
+  "generated_at": "2026-10-02T09:00:00+07:00",
+  "cluster_name": "CoE HPC",
+  "summary": {
+    "total_nodes": 24,
+    "idle_nodes": 9,
+    "mixed_nodes": 6,
+    "alloc_nodes": 7,
+    "down_nodes": 2,
+    "total_cpus": 1536,
+    "alloc_cpus": 892,
+    "total_gpus": 32,
+    "alloc_gpus": 21,
+    "jobs_running": 58,
+    "jobs_pending": 13
+  },
+  "partitions": [
+    {
+      "name": "compute",
+      "state": "up",
+      "total_nodes": 16,
+      "idle_nodes": 7,
+      "alloc_nodes": 7,
+      "down_nodes": 2,
+      "total_cpus": 1024,
+      "alloc_cpus": 640
+    },
+    {
+      "name": "gpu",
+      "state": "up",
+      "total_nodes": 6,
+      "idle_nodes": 2,
+      "alloc_nodes": 4,
+      "down_nodes": 0,
+      "total_cpus": 384,
+      "alloc_cpus": 220
+    },
+    {
+      "name": "bigmem",
+      "state": "up",
+      "total_nodes": 2,
+      "idle_nodes": 0,
+      "alloc_nodes": 2,
+      "down_nodes": 0,
+      "total_cpus": 128,
+      "alloc_cpus": 96
+    }
+  ],
+  "nodes": [
+    {"name": "cpn-01", "partition": "compute", "state": "idle", "cpus": 64, "cpus_alloc": 0, "gres": "-"},
+    {"name": "cpn-02", "partition": "compute", "state": "mixed", "cpus": 64, "cpus_alloc": 32, "gres": "-"},
+    {"name": "cpn-03", "partition": "compute", "state": "alloc", "cpus": 64, "cpus_alloc": 64, "gres": "-"},
+    {"name": "cpn-04", "partition": "compute", "state": "down*", "cpus": 64, "cpus_alloc": 0, "gres": "-"},
+    {"name": "gpn-01", "partition": "gpu", "state": "mixed", "cpus": 64, "cpus_alloc": 40, "gres": "gpu:a100:4(IDX:0-1)"},
+    {"name": "gpn-02", "partition": "gpu", "state": "alloc", "cpus": 64, "cpus_alloc": 64, "gres": "gpu:a100:4"},
+    {"name": "bmn-01", "partition": "bigmem", "state": "alloc", "cpus": 64, "cpus_alloc": 64, "gres": "-"}
+  ],
+  "queue": [
+    {"job_id": "184213", "user": "p-sutee", "partition": "gpu", "name": "resnet-train", "state": "RUNNING", "nodes": 1, "time": "02:14:09"},
+    {"job_id": "184240", "user": "s-araya", "partition": "compute", "name": "cfd_mesh_run", "state": "RUNNING", "nodes": 4, "time": "00:41:22"},
+    {"job_id": "184251", "user": "k-nattapon", "partition": "bigmem", "name": "genome_assembly", "state": "PENDING", "nodes": 1, "time": "0:00"},
+    {"job_id": "184252", "user": "w-chatchai", "partition": "gpu", "name": "diffusion-ft", "state": "PENDING", "nodes": 1, "time": "0:00"}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "coe-hpc-web",
+  "version": "1.0.0",
+  "description": "CoE HPC website (Pelican + Tailwind/DaisyUI, Slurm-backed cluster status)",
+  "private": true,
+  "scripts": {
+    "css:build": "tailwindcss -i ./theme/static/css/input.css -o ./theme/static/css/style.css --minify",
+    "css:watch": "tailwindcss -i ./theme/static/css/input.css -o ./theme/static/css/style.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/typography": "^0.5.20",
+    "daisyui": "^5.7.47",
+    "tailwindcss": "^4.3.3"
+  }
+}

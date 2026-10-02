@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} &mdash; {{ SITENAME }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 lg:px-8 py-12">
+  <a href="{{ SITEURL }}/news/" class="text-sm link link-hover opacity-70">&larr; Back to news</a>
+  <article class="prose max-w-none prose-headings:font-bold mt-4">
+    <h1 class="mb-1">{{ article.title }}</h1>
+    <p class="text-sm opacity-60 not-prose">
+      <time>{{ article.locale_date }}</time>
+      {% if article.category %} &middot; <span class="badge badge-outline badge-sm">{{ article.category }}</span>{% endif %}
+    </p>
+    {{ article.content }}
+  </article>
+</div>
+{% endblock %}

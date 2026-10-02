@@ -1,0 +1,123 @@
+{% if SLURM_STATUS %}
+{% set s = SLURM_STATUS.summary %}
+<div class="card bg-base-100 shadow-xl border border-base-200">
+  <div class="card-body">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="card-title">Live Cluster Status</h2>
+      <div class="flex items-center gap-2 text-xs opacity-60">
+        {% if SLURM_STATUS._is_sample %}
+        <span class="badge badge-warning badge-outline">demo data</span>
+        {% endif %}
+        <span>Updated {{ SLURM_STATUS.generated_at }}</span>
+      </div>
+    </div>
+
+    <div class="stats stats-vertical sm:stats-horizontal shadow-none bg-base-200 mt-4 w-full">
+      <div class="stat">
+        <div class="stat-title">Nodes</div>
+        <div class="stat-value text-primary text-2xl">{{ s.total_nodes }}</div>
+        <div class="stat-desc">{{ s.idle_nodes }} idle &middot; {{ s.alloc_nodes }} allocated{% if s.down_nodes %} &middot; {{ s.down_nodes }} down{% endif %}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">CPU Cores in Use</div>
+        <div class="stat-value text-2xl">{{ s.alloc_cpus }}<span class="text-base opacity-50"> / {{ s.total_cpus }}</span></div>
+        <div class="stat-desc">
+          <progress class="progress progress-primary w-32" value="{{ s.alloc_cpus }}" max="{{ s.total_cpus or 1 }}"></progress>
+        </div>
+      </div>
+      {% if s.total_gpus %}
+      <div class="stat">
+        <div class="stat-title">GPUs in Use</div>
+        <div class="stat-value text-2xl">{{ s.alloc_gpus }}<span class="text-base opacity-50"> / {{ s.total_gpus }}</span></div>
+        <div class="stat-desc">
+          <progress class="progress progress-secondary w-32" value="{{ s.alloc_gpus }}" max="{{ s.total_gpus or 1 }}"></progress>
+        </div>
+      </div>
+      {% endif %}
+      <div class="stat">
+        <div class="stat-title">Jobs</div>
+        <div class="stat-value text-2xl">{{ s.jobs_running }}</div>
+        <div class="stat-desc">running &middot; {{ s.jobs_pending }} pending</div>
+      </div>
+    </div>
+
+    {% if SLURM_STATUS.partitions %}
+    <div class="overflow-x-auto mt-6">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Partition</th>
+            <th>Nodes</th>
+            <th>Idle</th>
+            <th>Allocated</th>
+            <th>Down</th>
+            <th>CPU Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in SLURM_STATUS.partitions %}
+          <tr>
+            <td class="font-medium">{{ p.name }}</td>
+            <td>{{ p.total_nodes }}</td>
+            <td><span class="badge badge-success badge-sm badge-outline">{{ p.idle_nodes }}</span></td>
+            <td><span class="badge badge-info badge-sm badge-outline">{{ p.alloc_nodes }}</span></td>
+            <td>{% if p.down_nodes %}<span class="badge badge-error badge-sm badge-outline">{{ p.down_nodes }}</span>{% else %}0{% endif %}</td>
+            <td>{{ p.alloc_cpus }} / {{ p.total_cpus }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if SLURM_STATUS.queue %}
+    <div class="collapse collapse-arrow bg-base-200 mt-6">
+      <input type="checkbox" />
+      <div class="collapse-title font-medium">Job queue ({{ SLURM_STATUS.queue|length }} shown)</div>
+      <div class="collapse-content">
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Job ID</th>
+                <th>User</th>
+                <th>Partition</th>
+                <th>Name</th>
+                <th>State</th>
+                <th>Nodes</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for j in SLURM_STATUS.queue %}
+              <tr>
+                <td class="font-mono text-xs">{{ j.job_id }}</td>
+                <td>{{ j.user }}</td>
+                <td>{{ j.partition }}</td>
+                <td>{{ j.name }}</td>
+                <td>
+                  {% if j.state == "RUNNING" %}
+                  <span class="badge badge-success badge-sm">running</span>
+                  {% elif j.state == "PENDING" %}
+                  <span class="badge badge-warning badge-sm">pending</span>
+                  {% else %}
+                  <span class="badge badge-ghost badge-sm">{{ j.state|lower }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ j.nodes }}</td>
+                <td class="font-mono text-xs">{{ j.time }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="alert alert-warning shadow-sm">
+  <span>Cluster status is temporarily unavailable &mdash; the Slurm snapshot has not been generated yet.</span>
+</div>
+{% endif %}

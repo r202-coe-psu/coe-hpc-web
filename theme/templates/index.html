@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="bg-gradient-to-b from-base-200 to-base-100">
+  <div class="max-w-6xl mx-auto px-4 lg:px-8 py-16 text-center">
+    <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight">{{ SITENAME }}</h1>
+    <p class="mt-4 text-lg opacity-80 max-w-2xl mx-auto">{{ SITESUBTITLE }} &mdash; shared compute, GPUs, and storage for research across the College of Engineering, scheduled with Slurm.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="{{ SITEURL }}/getting-started/" class="btn btn-primary">Request an Account</a>
+      <a href="{{ SITEURL }}/documentation/" class="btn btn-outline">Read the Docs</a>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-6xl mx-auto px-4 lg:px-8 -mt-10">
+  {% include "includes/slurm_status.html" %}
+</section>
+
+<section class="max-w-6xl mx-auto px-4 lg:px-8 py-16">
+  <div class="grid gap-6 md:grid-cols-3">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title">Getting Started</h2>
+        <p class="opacity-80">Request an account, log in over SSH, and submit your first Slurm job in minutes.</p>
+        <div class="card-actions justify-end"><a href="{{ SITEURL }}/getting-started/" class="btn btn-sm btn-ghost">Read more &rarr;</a></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title">Documentation</h2>
+        <p class="opacity-80">Partitions, modules, storage quotas, and example Slurm batch scripts.</p>
+        <div class="card-actions justify-end"><a href="{{ SITEURL }}/documentation/" class="btn btn-sm btn-ghost">Read more &rarr;</a></div>
+      </div>
+    </div>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title">Support</h2>
+        <p class="opacity-80">Stuck on a job failure or a software build? Reach the HPC team directly.</p>
+        <div class="card-actions justify-end"><a href="{{ SITEURL }}/contact/" class="btn btn-sm btn-ghost">Read more &rarr;</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if articles %}
+<section class="max-w-6xl mx-auto px-4 lg:px-8 pb-16">
+  <div class="flex items-baseline justify-between mb-6">
+    <h2 class="text-2xl font-bold">Latest News</h2>
+    <a href="{{ SITEURL }}/news/" class="link link-primary text-sm">View all &rarr;</a>
+  </div>
+  <div class="grid gap-6 md:grid-cols-3">
+    {% for article in articles[:3] %}
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <time class="text-xs uppercase tracking-wide opacity-60">{{ article.locale_date }}</time>
+        <h3 class="card-title text-base"><a href="{{ SITEURL }}/{{ article.url }}">{{ article.title }}</a></h3>
+        <p class="opacity-80 text-sm">{{ article.summary|striptags|truncate(140) }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
