@@ -45,10 +45,10 @@ pelicanconf.py / publishconf.py   Pelican settings (dev vs. production)
 
 ## Local development
 
-Requires Python 3.10+ and Node 18+.
+Requires Python 3.11+, [Poetry](https://python-poetry.org/), and Node 18+.
 
 ```bash
-make install       # creates .venv, installs Pelican + npm deps
+make install       # poetry install (Pelican) + npm install (Tailwind/DaisyUI)
 make devserver     # builds CSS, builds the site, serves + autoreloads at :8000
 ```
 
@@ -84,8 +84,8 @@ login/management node, or anywhere that can run `sinfo`/`squeue`), set up a
 cron job or systemd timer that regenerates the snapshot and rebuilds:
 
 ```cron
-*/5 * * * * cd /path/to/hpc-web && .venv/bin/python scripts/slurm_snapshot.py \
-    && .venv/bin/pelican content -o output -s publishconf.py >> /var/log/hpc-web.log 2>&1
+*/5 * * * * cd /path/to/hpc-web && poetry run python scripts/slurm_snapshot.py \
+    && poetry run pelican content -o output -s publishconf.py >> /var/log/hpc-web.log 2>&1
 ```
 
 Then sync/serve `output/` with your webserver of choice (nginx, Apache, an
@@ -100,3 +100,29 @@ snapshot script on the login node and `rsync` just
 ```bash
 make publish   # uses publishconf.py — set SITEURL there first
 ```
+
+## Docker deployment
+
+The `Dockerfile` is a multi-stage build: it compiles the Tailwind/DaisyUI CSS
+and renders the Pelican site with `publishconf.py` in a build stage, then
+serves the prerendered static output with nginx.
+
+```bash
+make docker-build   # docker build -t coe-hpc-web .
+make docker-run     # docker run --rm -p 8000:80 coe-hpc-web
+```
+
+Because the Slurm snapshot can only be generated on a host with Slurm client
+tools (see above), the image bakes in whatever `content/data/cluster_status.json`
+(or the `.sample.json` fallback) is present at build time. To publish live
+data, either:
+
+- regenerate `content/data/cluster_status.json` before running
+  `docker build`, or
+- mount a freshly-generated snapshot and rebuild the site inside a running
+  container / init step rather than relying on the baked-in build.
+
+A typical production setup still reruns `scripts/slurm_snapshot.py` on a
+Slurm login node every few minutes, then rebuilds and redeploys the image
+(or just `rsync`s a freshly-built `output/` into a running nginx container's
+volume) — see the cron example above.

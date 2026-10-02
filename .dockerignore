@@ -1,0 +1,9 @@
+.venv/
+node_modules/
+output/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+README.md
+content/data/cluster_status.json
