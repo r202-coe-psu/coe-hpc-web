@@ -64,4 +64,34 @@ module load cuda/12.4 python/3.11
 python3 train.py
 ```
 
+## Example: Multi-Node MPI Job
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=mpi-sim
+#SBATCH --partition=compute
+#SBATCH --nodes=4
+#SBATCH --ntasks-per-node=16
+#SBATCH --time=08:00:00
+
+module load openmpi/4.1 gcc/13.2
+srun ./simulation
+```
+
+## Example: Job Array
+
+Submit many similar jobs (e.g. a parameter sweep) as a single array:
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=sweep
+#SBATCH --partition=compute
+#SBATCH --array=1-20
+#SBATCH --time=01:00:00
+#SBATCH --output=sweep-%A_%a.out
+
+module load python/3.11
+python3 run_trial.py --trial $SLURM_ARRAY_TASK_ID
+```
+
 Questions not covered here? See [Contact](/contact/).
