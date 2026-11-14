@@ -3,11 +3,11 @@ Slug: documentation
 
 ## Partitions
 
-| Partition | Purpose                        | Max walltime |
-|-----------|---------------------------------|--------------|
-| `compute` | General-purpose CPU jobs         | 48h          |
-| `gpu`     | A100 GPU jobs                    | 24h          |
-| `bigmem`  | High-memory (≥512GB) jobs        | 72h          |
+| Partition | Purpose                        | 
+|-----------|---------------------------------|
+| `compute` | General-purpose CPU jobs         |
+| `gpu`     | A100 GPU jobs                    |
+| `bigmem`  | High-memory (≥512GB) jobs        ||
 
 Live node/partition occupancy is shown on the [homepage](/) and is refreshed
 automatically from Slurm every few minutes.
@@ -17,27 +17,18 @@ automatically from Slurm every few minutes.
 We require SSH key authentication:
 
 ```bash
-ssh-keygen -t ed25519 -C "you@example.ac.th"
-ssh-copy-id <username>@hpc.coe.example.ac.th
+ssh-keygen -t ed25519 -C "<username>@psu.ac.th"
+ssh-copy-id <username>@psu.ac.th
 ```
 
-## Modules
-
-Software is provided via environment modules.
-
-```bash
-module avail            # list all available software
-module load gcc/13.2
-module load python/3.11
-module spider pytorch   # search for a specific package
-```
-
+<!---
 ## Storage
 
 | Path            | Quota   | Backed up | Purged              |
 |------------------|---------|-----------|----------------------|
 | `$HOME`          | 50 GB   | Yes       | Never                |
 | `/scratch/$USER` | 2 TB    | No        | Files older than 30d |
+--->
 
 ## Common Slurm Commands
 

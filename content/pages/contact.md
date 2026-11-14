@@ -1,9 +1,8 @@
 Title: Contact
 Slug: contact
 
-**Support email:** [hpc-support@coe.example.ac.th](mailto:hpc-support@coe.example.ac.th)
+**Support email:** [thanathip.l@coe.ac.th](mailto:thanathip.l@coe.ac.th)
 
-**Office hours:** Mon–Fri, 09:00–16:30 (Asia/Bangkok), Engineering Building 2, Room 214.
 
 When reporting a problem, please include:
 
@@ -13,9 +12,8 @@ When reporting a problem, please include:
 
 ## Office / Mailing Address
 
-*(Replace this with your institution's real address)*
 
-College of Engineering HPC Center<br>
+Department of Computer Engineering<br>
 Faculty of Engineering<br>
-&lt;Your University&gt;<br>
-&lt;City, Postal Code, Country&gt;
+&lt;Prince of Songkla University&gt;<br>
+&lt;Hatyai, Songkla, Thailand&gt;

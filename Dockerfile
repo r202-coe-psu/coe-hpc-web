@@ -1,37 +1,25 @@
-# syntax=docker/dockerfile:1
-
-# --- Build stage: compile Tailwind/DaisyUI CSS and render the static site ---
-FROM node:20-slim AS builder
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 python3-venv pipx \
-    && rm -rf /var/lib/apt/lists/* \
-    && pipx install poetry \
-    && pipx ensurepath
-
-ENV PATH="/root/.local/bin:${PATH}"
-
+# --- Stage 1: build Tailwind/daisyUI CSS ---
+FROM node:20-alpine AS css-builder
 WORKDIR /app
-
-COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.in-project true \
-    && poetry install --no-root --only main
-
 COPY package.json package-lock.json ./
 RUN npm ci
+COPY theme ./theme
+RUN npm run build:css
 
-COPY . .
+# --- Stage 2: build the static site with Pelican ---
+FROM python:3.14-slim AS site-builder
+WORKDIR /app
+RUN pip install --no-cache-dir poetry==2.3.4
+ENV POETRY_VIRTUALENVS_CREATE=false
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --no-root --no-interaction --only main
+COPY pelicanconf.py publishconf.py ./
+COPY content ./content
+COPY theme ./theme
+COPY --from=css-builder /app/theme/r202/static/css/style.css ./theme/r202/static/css/style.css
+RUN pelican content -s publishconf.py -o output
 
-# Live Slurm data is never baked into the image; the sample snapshot keeps
-# the build hermetic. Mount a real cluster_status.json at runtime (or rebuild
-# the image) to publish live data instead -- see README.md.
-RUN npm run css:build \
-    && poetry run pelican content -o output -s publishconf.py
-
-# --- Runtime stage: serve the prerendered static site ---
-FROM nginx:1.27-alpine AS runtime
-
-COPY --from=builder /app/output /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
+# --- Stage 3: serve the static site ---
+FROM nginx:alpine
+COPY --from=site-builder /app/output /usr/share/nginx/html
 EXPOSE 80

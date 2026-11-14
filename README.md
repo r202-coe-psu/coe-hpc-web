@@ -112,6 +112,18 @@ make docker-build   # docker build -t coe-hpc-web .
 make docker-run     # docker run --rm -p 8000:80 coe-hpc-web
 ```
 
+For a long-running deployment use Docker Compose (`docker-compose.yml`), which
+adds a restart policy, healthcheck, read-only filesystem and log rotation:
+
+```bash
+make deploy                    # docker compose up -d --build  (serves on :8000)
+HOST_PORT=80 make deploy       # serve on a different host port (or set it in .env)
+make deploy-down               # docker compose down
+```
+
+Re-running `make deploy` after refreshing the Slurm snapshot rebuilds the image
+and swaps the container in place.
+
 Because the Slurm snapshot can only be generated on a host with Slurm client
 tools (see above), the image bakes in whatever `content/data/cluster_status.json`
 (or the `.sample.json` fallback) is present at build time. To publish live

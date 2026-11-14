@@ -3,20 +3,16 @@ Slug: getting-started
 
 # Requesting an Account
 
-Accounts on the CoE HPC cluster are available to College of Engineering faculty,
-staff, and their students/collaborators.
+Accounts on the CoE HPC cluster are available to Department of Computer Engineering, Faculty of Engineering, Prince of Songkla University staff, and their students/collaborators.
 
-1. Ask your supervisor (PI) to email **hpc-support@coe.example.ac.th** with your
-   full name, university ID, and department.
-2. You will receive your username and SSH setup instructions within 2 business
-   days.
-3. Set up [multi-factor / SSH key authentication](/documentation/#ssh-access)
-   before your first login.
+1. Go to http://nillapat.coe.psu.ac.th, login with PSU Passport, the account will automaticly create, allow only PSU intranet and outsite PSU using VPN.
+2. It you would like to login via ssh the username is s<student_id> and password is CoE-<student_id> please change the password at the first time login.
+
 
 ## Logging In
 
 ```bash
-ssh <username>@hpc.coe.example.ac.th
+ssh s<username>@nillapat.coe.psu.ac.th
 ```
 
 ## Your First Job

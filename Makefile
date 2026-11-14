@@ -19,6 +19,8 @@ help:
 	@echo "make slurm-snapshot- poll Slurm and refresh content/data/cluster_status.json"
 	@echo "make docker-build  - build the production Docker image"
 	@echo "make docker-run    - run the production Docker image on :8000"
+	@echo "make deploy        - build + (re)start the site with docker compose"
+	@echo "make deploy-down   - stop the docker compose deployment"
 	@echo "make clean         - remove build output"
 
 install:
@@ -49,7 +51,13 @@ docker-build:
 docker-run:
 	docker run --rm -p 8000:80 coe-hpc-web
 
+deploy:
+	docker compose up -d --build
+
+deploy-down:
+	docker compose down
+
 clean:
 	rm -rf $(OUTPUTDIR)
 
-.PHONY: help install css css-watch html publish devserver slurm-snapshot docker-build docker-run clean
+.PHONY: help install css css-watch html publish devserver slurm-snapshot docker-build docker-run deploy deploy-down clean
