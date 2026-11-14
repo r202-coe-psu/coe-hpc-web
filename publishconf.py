@@ -4,8 +4,10 @@ import os
 sys.path.append(os.curdir)
 from pelicanconf import *  # noqa
 
-# Set this to the real, published URL when you deploy (e.g. https://hpc.coe.example.ac.th)
-SITEURL = "https://hpc.example.ac.th"
+# Public URL of the deployed site (e.g. https://hpc.coe.psu.ac.th), taken from
+# the SITEURL env var / Docker build arg. Empty -> root-relative links ("/theme/..."),
+# which work on any host or port.
+SITEURL = os.environ.get("SITEURL", "").rstrip("/")
 RELATIVE_URLS = False
 
 FEED_ALL_ATOM = "feeds/all.atom.xml"

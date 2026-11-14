@@ -18,6 +18,8 @@ COPY content ./content
 COPY plugins ./plugins
 COPY theme ./theme
 COPY --from=css-builder /app/theme/static/css/style.css ./theme/static/css/style.css
+ARG SITEURL=""
+ENV SITEURL=${SITEURL}
 RUN pelican content -s publishconf.py -o output
 
 # --- Stage 3: serve the static site ---

@@ -15,7 +15,12 @@ name: coe-hpc-web
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        # Public URL of the site, e.g. SITEURL=https://hpc.coe.psu.ac.th in .env.
+        # Leave empty to use root-relative links that work on any host/port.
+        SITEURL: ${SITEURL:-}
     ports:
       - "9080:80"
     restart: unless-stopped
