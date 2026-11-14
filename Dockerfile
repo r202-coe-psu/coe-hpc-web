@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY theme ./theme
-RUN npm run build:css
+RUN npm run css:build
 
 # --- Stage 2: build the static site with Pelican ---
 FROM python:3.14-slim AS site-builder
@@ -15,11 +15,13 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-root --no-interaction --only main
 COPY pelicanconf.py publishconf.py ./
 COPY content ./content
+COPY plugins ./plugins
 COPY theme ./theme
-COPY --from=css-builder /app/theme/r202/static/css/style.css ./theme/r202/static/css/style.css
+COPY --from=css-builder /app/theme/static/css/style.css ./theme/static/css/style.css
 RUN pelican content -s publishconf.py -o output
 
 # --- Stage 3: serve the static site ---
 FROM nginx:alpine
 COPY --from=site-builder /app/output /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
