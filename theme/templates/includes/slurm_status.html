@@ -16,7 +16,7 @@
       <div class="stat">
         <div class="stat-title">Nodes</div>
         <div class="stat-value text-primary text-2xl">{{ s.total_nodes }}</div>
-        <div class="stat-desc">{{ s.idle_nodes }} idle &middot; {{ s.alloc_nodes }} allocated{% if s.down_nodes %} &middot; {{ s.down_nodes }} down{% endif %}</div>
+        <div class="stat-desc">{{ s.idle_nodes }} idle{% if s.mixed_nodes %} &middot; {{ s.mixed_nodes }} partly used{% endif %} &middot; {{ s.alloc_nodes }} allocated{% if s.down_nodes %} &middot; {{ s.down_nodes }} down{% endif %}</div>
       </div>
       <div class="stat">
         <div class="stat-title">CPU Cores in Use</div>
@@ -49,9 +49,11 @@
             <th>Partition</th>
             <th>Nodes</th>
             <th>Idle</th>
+            <th>Partly used</th>
             <th>Allocated</th>
             <th>Down</th>
             <th>CPU Usage</th>
+            <th>GPU Usage</th>
           </tr>
         </thead>
         <tbody>
@@ -60,9 +62,11 @@
             <td class="font-medium">{{ p.name }}</td>
             <td>{{ p.total_nodes }}</td>
             <td><span class="badge badge-success badge-sm badge-outline">{{ p.idle_nodes }}</span></td>
+            <td><span class="badge badge-warning badge-sm badge-outline">{{ p.mixed_nodes or 0 }}</span></td>
             <td><span class="badge badge-info badge-sm badge-outline">{{ p.alloc_nodes }}</span></td>
             <td>{% if p.down_nodes %}<span class="badge badge-error badge-sm badge-outline">{{ p.down_nodes }}</span>{% else %}0{% endif %}</td>
             <td>{{ p.alloc_cpus }} / {{ p.total_cpus }}</td>
+            <td>{% if p.total_gpus %}{{ p.alloc_gpus or 0 }} / {{ p.total_gpus }}{% else %}&ndash;{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>

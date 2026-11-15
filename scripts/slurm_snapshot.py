@@ -96,6 +96,8 @@ def build_snapshot(nodes_json: dict, squeue: dict, cluster_name: str) -> dict:
             "down_nodes": 0,
             "total_cpus": 0,
             "alloc_cpus": 0,
+            "total_gpus": 0,
+            "alloc_gpus": 0,
         }
     )
 
@@ -135,8 +137,10 @@ def build_snapshot(nodes_json: dict, squeue: dict, cluster_name: str) -> dict:
         summary[f"{state}_nodes"] = summary.get(f"{state}_nodes", 0) + 1
         summary["total_cpus"] += cpus
         summary["alloc_cpus"] += cpus_alloc
-        summary["total_gpus"] += gres_count(gres)
-        summary["alloc_gpus"] += gres_count(n.get("gres_used", ""))
+        gpus = gres_count(gres)
+        gpus_alloc = gres_count(n.get("gres_used", ""))
+        summary["total_gpus"] += gpus
+        summary["alloc_gpus"] += gpus_alloc
 
         for pname in partition_names:
             p = partitions[pname]
@@ -144,6 +148,8 @@ def build_snapshot(nodes_json: dict, squeue: dict, cluster_name: str) -> dict:
             p[f"{state}_nodes"] = p.get(f"{state}_nodes", 0) + 1
             p["total_cpus"] += cpus
             p["alloc_cpus"] += cpus_alloc
+            p["total_gpus"] += gpus
+            p["alloc_gpus"] += gpus_alloc
 
     queue = []
     for j in jobs_raw:
