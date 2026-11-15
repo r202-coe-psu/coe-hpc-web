@@ -1,6 +1,6 @@
 AUTHOR = "CoE HPC Team"
 SITENAME = "CoE HPC"
-SITESUBTITLE = "College of Engineering High-Performance Computing"
+SITESUBTITLE = "CoE Mini High-Performance Computing"
 SITEURL = ""
 
 PATH = "content"

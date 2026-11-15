@@ -4,10 +4,11 @@
 <section class="bg-gradient-to-b from-base-200 to-base-100">
   <div class="max-w-6xl mx-auto px-4 lg:px-8 py-16 text-center">
     <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight">{{ SITENAME }}</h1>
-    <p class="mt-4 text-lg opacity-80 max-w-2xl mx-auto">{{ SITESUBTITLE }} &mdash; shared compute, GPUs, and storage for research across the College of Engineering, scheduled with Slurm.</p>
+    <p class="mt-4 text-lg opacity-80 max-w-2xl mx-auto">{{ SITESUBTITLE }} &mdash; shared compute, GPUs, and storage for research across the Department of Computer Engineering, scheduled with Slurm.</p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       <a href="{{ SITEURL }}/getting-started/" class="btn btn-primary">Request an Account</a>
       <a href="{{ SITEURL }}/documentation/" class="btn btn-outline">Read the Docs</a>
+      <a href="{{ SITEURL }}/nillapat/" class="btn btn-outline">Nillapat System</a>
     </div>
   </div>
 </section>
@@ -17,7 +18,14 @@
 </section>
 
 <section class="max-w-6xl mx-auto px-4 lg:px-8 py-16">
-  <div class="grid gap-6 md:grid-cols-3">
+  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title">Nillapat System</h2>
+        <p class="opacity-80">GPU cluster with RTX 2080 Ti, GTX 1080 Ti, and Radeon RX 9070 XT nodes &mdash; partitions, specs, and CUDA/MPI examples.</p>
+        <div class="card-actions justify-end"><a href="{{ SITEURL }}/nillapat/" class="btn btn-sm btn-ghost">Read more &rarr;</a></div>
+      </div>
+    </div>
     <div class="card bg-base-100 border border-base-200 shadow-sm">
       <div class="card-body">
         <h2 class="card-title">Getting Started</h2>
