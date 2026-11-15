@@ -2,9 +2,14 @@
 """
 slurm_snapshot.py
 
-Polls Slurm (via `sinfo --json` and `squeue --json`, Slurm >= 21.08) on a
-login/management node and writes a normalized JSON snapshot that the
+Polls Slurm (via `scontrol show nodes --json` and `squeue --json`,
+Slurm >= 21.08) and writes a normalized JSON snapshot that the
 `slurm_status` Pelican plugin reads at *build* time.
+
+Run it either on a Slurm login node, or from anywhere with key-based SSH
+access to one using --host, e.g.:
+
+    python scripts/slurm_snapshot.py --host nillapat.coe.psu.ac.th
 
 Run this on a timer (cron or systemd timer, see README.md) and rebuild the
 static site after each run, e.g.:
@@ -26,13 +31,23 @@ import os
 import shutil
 import subprocess
 import sys
+import shlex
 import tempfile
 from collections import defaultdict
 from datetime import datetime, timezone
 
 
-def run_json(cmd: list[str]) -> dict:
-    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+def run_json(cmd: list[str], host: str | None = None) -> dict:
+    if host:
+        # BatchMode: never prompt for a password -- fail fast under cron.
+        cmd = [
+            "ssh",
+            "-o", "BatchMode=yes",
+            "-o", "ConnectTimeout=10",
+            host,
+            shlex.join(cmd),
+        ]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     if out.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd)} failed: {out.stderr.strip()}")
     return json.loads(out.stdout)
@@ -52,8 +67,23 @@ def node_alloc_state(node: dict) -> str:
     return "idle"
 
 
-def build_snapshot(sinfo: dict, squeue: dict) -> dict:
-    nodes_raw = sinfo.get("nodes", [])
+def gres_count(gres: str) -> int:
+    """Sum GPU counts in a GRES string like "gpu:nvidia:4" or
+    "gpu:nvidia:2(IDX:0-1),gpu:a100:1(IDX:2)"."""
+    total = 0
+    for item in (gres or "").split(","):
+        item = item.split("(")[0].strip()
+        if not item.startswith("gpu"):
+            continue
+        try:
+            total += int(item.split(":")[-1])
+        except ValueError:
+            pass
+    return total
+
+
+def build_snapshot(nodes_json: dict, squeue: dict, cluster_name: str) -> dict:
+    nodes_raw = nodes_json.get("nodes", [])
     jobs_raw = squeue.get("jobs", [])
 
     nodes = []
@@ -105,15 +135,8 @@ def build_snapshot(sinfo: dict, squeue: dict) -> dict:
         summary[f"{state}_nodes"] = summary.get(f"{state}_nodes", 0) + 1
         summary["total_cpus"] += cpus
         summary["alloc_cpus"] += cpus_alloc
-        if gres and gres != "-":
-            # crude "gpu:TYPE:N" parse, good enough for a dashboard count
-            try:
-                gpu_count = int(gres.split(":")[-1].split("(")[0])
-            except (ValueError, IndexError):
-                gpu_count = 0
-            summary["total_gpus"] += gpu_count
-            if state == "alloc":
-                summary["alloc_gpus"] += gpu_count
+        summary["total_gpus"] += gres_count(gres)
+        summary["alloc_gpus"] += gres_count(n.get("gres_used", ""))
 
         for pname in partition_names:
             p = partitions[pname]
@@ -162,7 +185,7 @@ def build_snapshot(sinfo: dict, squeue: dict) -> dict:
 
     return {
         "generated_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
-        "cluster_name": os.environ.get("SLURM_CLUSTER_DISPLAY_NAME", "CoE HPC"),
+        "cluster_name": cluster_name,
         "summary": summary,
         "partitions": partitions_out,
         "nodes": nodes,
@@ -194,16 +217,31 @@ def main() -> int:
         default="content/data/cluster_status.json",
         help="Where to write the JSON snapshot (default: %(default)s)",
     )
+    parser.add_argument(
+        "--host",
+        default=os.environ.get("SLURM_SSH_HOST") or None,
+        help="Run the Slurm commands on this host over SSH (key auth required), "
+        "e.g. nillapat.coe.psu.ac.th or user@host. Defaults to $SLURM_SSH_HOST; "
+        "if unset, runs them locally.",
+    )
+    parser.add_argument(
+        "--cluster-name",
+        default=os.environ.get("SLURM_CLUSTER_DISPLAY_NAME", "CoE HPC"),
+        help="Display name stored in the snapshot (default: %(default)s)",
+    )
     args = parser.parse_args()
 
     try:
-        sinfo = run_json(["sinfo", "--json"])
-        squeue = run_json(["squeue", "--json"])
-    except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        # scontrol (unlike `sinfo --json` on Slurm >= 23.x) returns one entry
+        # per node with cpus/alloc_cpus/gres/gres_used/partitions.
+        nodes_json = run_json(["scontrol", "show", "nodes", "--json"], args.host)
+        squeue = run_json(["squeue", "--json"], args.host)
+    except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired,
+            json.JSONDecodeError) as exc:
         print(f"slurm_snapshot: failed to query Slurm: {exc}", file=sys.stderr)
         return 1
 
-    snapshot = build_snapshot(sinfo, squeue)
+    snapshot = build_snapshot(nodes_json, squeue, args.cluster_name)
     write_atomic(args.output, snapshot)
     print(f"slurm_snapshot: wrote {args.output}")
     return 0

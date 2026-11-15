@@ -22,6 +22,16 @@ ARG SITEURL=""
 ENV SITEURL=${SITEURL}
 RUN pelican content -s publishconf.py -o output
 
+# --- Stage 2b: periodic Slurm status updater (docker-compose `updater`) ---
+# Reuses the site-builder environment, adds ssh/rsync, and rebuilds the site
+# into a volume shared with nginx. Build it with `--target updater`.
+FROM site-builder AS updater
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssh-client rsync tzdata \
+    && rm -rf /var/lib/apt/lists/*
+COPY scripts ./scripts
+CMD ["sh", "scripts/docker-updater.sh"]
+
 # --- Stage 3: serve the static site ---
 FROM nginx:alpine
 COPY --from=site-builder /app/output /usr/share/nginx/html

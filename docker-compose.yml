@@ -7,9 +7,15 @@
 # The host port defaults to 8000; override with HOST_PORT=80 docker compose up -d
 # (or put HOST_PORT=... in a .env file next to this one).
 #
-# The Slurm cluster status is baked in at build time from
-# content/data/cluster_status.json (or the sample fallback). Refresh the snapshot
-# and re-run `docker compose up -d --build` to publish new data -- see README.md.
+# The `updater` service keeps the homepage Slurm status current: every
+# SLURM_REFRESH_SECONDS (default 300) it SSHes to the Slurm login node, runs
+# scontrol/squeue, rebuilds the site and syncs it into the `site` volume that
+# nginx serves. Settings (put them in .env next to this file):
+#
+#   SLURM_SSH_USER=<your nillapat username>     (default: $USER)
+#   SLURM_SSH_KEY=/home/<you>/.ssh/id_ed25519   (passwordless key; default ~/.ssh/id_ed25519)
+#   SLURM_HOST_NAME=nillapat.coe.psu.ac.th
+#   SLURM_REFRESH_SECONDS=300
 
 name: coe-hpc-web
 
@@ -23,6 +29,10 @@ services:
         SITEURL: ${SITEURL:-}
     ports:
       - "9080:80"
+    volumes:
+      # Seeded from the image's prebuilt site on first start, then kept
+      # up to date by the updater service.
+      - site:/usr/share/nginx/html
     restart: unless-stopped
 
     healthcheck:
@@ -37,3 +47,29 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  updater:
+    build:
+      context: .
+      target: updater
+    environment:
+      SITEURL: ${SITEURL:-}
+      SLURM_HOST: ${SLURM_SSH_USER:-${USER}}@${SLURM_HOST_NAME:-nillapat.coe.psu.ac.th}
+      SLURM_CLUSTER_NAME: ${SLURM_CLUSTER_NAME:-Nillapat}
+      SLURM_REFRESH_SECONDS: ${SLURM_REFRESH_SECONDS:-300}
+      TZ: ${TZ:-Asia/Bangkok}
+    volumes:
+      - site:/site
+      - ${SLURM_SSH_KEY:-${HOME}/.ssh/id_ed25519}:/run/secrets/slurm_ssh_key:ro
+      - ${HOME}/.ssh/known_hosts:/run/secrets/known_hosts:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  site:

@@ -79,12 +79,27 @@ support email address used throughout the templates/content
 
 ## Deploying the Slurm snapshot + rebuild on a schedule
 
-On a host with Slurm client tools and access to this repo (typically the
-login/management node, or anywhere that can run `sinfo`/`squeue`), set up a
-cron job or systemd timer that regenerates the snapshot and rebuilds:
+The snapshot script can query the cluster remotely over SSH, so the build
+host doesn't need Slurm installed. It only needs key-based SSH access (no
+password prompt) to the login node, by default `nillapat.coe.psu.ac.th`:
+
+```bash
+make slurm-snapshot                              # ssh nillapat.coe.psu.ac.th, runs scontrol/squeue
+make slurm-snapshot SLURM_HOST=user@other-host   # a different login node / SSH user
+make slurm-snapshot SLURM_HOST=                  # run scontrol/squeue locally instead
+# or directly:
+poetry run python scripts/slurm_snapshot.py --host nillapat.coe.psu.ac.th --cluster-name Nillapat
+```
+
+`make deploy` refreshes the snapshot before it rebuilds the Docker image. If
+the cluster is unreachable, the build uses the previous snapshot. With Docker
+Compose, the `updater` service refreshes the status on its own (see
+[Automatic Slurm status updates](#automatic-slurm-status-updates)).
+
+Without Docker, rebuild on a timer:
 
 ```cron
-*/5 * * * * cd /path/to/hpc-web && poetry run python scripts/slurm_snapshot.py \
+*/5 * * * * cd /path/to/hpc-web && poetry run python scripts/slurm_snapshot.py --host nillapat.coe.psu.ac.th \
     && poetry run pelican content -o output -s publishconf.py >> /var/log/hpc-web.log 2>&1
 ```
 
@@ -121,20 +136,35 @@ HOST_PORT=80 make deploy       # serve on a different host port (or set it in .e
 make deploy-down               # docker compose down
 ```
 
-Re-running `make deploy` after refreshing the Slurm snapshot rebuilds the image
-and swaps the container in place.
+### Automatic Slurm status updates
 
-Because the Slurm snapshot can only be generated on a host with Slurm client
-tools (see above), the image bakes in whatever `content/data/cluster_status.json`
-(or the `.sample.json` fallback) is present at build time. To publish live
-data, either:
+Compose runs two services that share a `site` volume:
 
-- regenerate `content/data/cluster_status.json` before running
-  `docker build`, or
-- mount a freshly-generated snapshot and rebuild the site inside a running
-  container / init step rather than relying on the baked-in build.
+- `web`: nginx serving the site. Its image includes a prebuilt copy, which
+  fills the volume on first start.
+- `updater`: every `SLURM_REFRESH_SECONDS` (default 300) it SSHes to the
+  Slurm login node, runs `scontrol`/`squeue`, rebuilds the site with Pelican,
+  and `rsync`s it into the volume. If the cluster is unreachable it keeps the
+  last snapshot, and the "Updated" timestamp on the homepage shows its age.
 
-A typical production setup still reruns `scripts/slurm_snapshot.py` on a
-Slurm login node every few minutes, then rebuilds and redeploys the image
-(or just `rsync`s a freshly-built `output/` into a running nginx container's
-volume) — see the cron example above.
+The updater needs a passwordless SSH key for an account on the login node.
+It mounts `~/.ssh/id_ed25519` and `~/.ssh/known_hosts` read-only and connects
+as `$USER`. To change any of this, set it in `.env`:
+
+```bash
+SLURM_SSH_USER=myuser                       # login name on nillapat
+SLURM_SSH_KEY=/home/me/.ssh/id_hpcweb       # key to mount (no passphrase)
+SLURM_HOST_NAME=nillapat.coe.psu.ac.th
+SLURM_REFRESH_SECONDS=300
+TZ=Asia/Bangkok                             # timezone for the "Updated" timestamp
+```
+
+For production, use a dedicated key. On the login node, consider a
+read-only account, or restrict the key in `authorized_keys`.
+
+```bash
+docker compose logs -f updater   # "updater: site refreshed at ..." every cycle
+```
+
+You can still use `make deploy` to rebuild the images after changing content,
+templates or code. No cron job is needed for the status.
